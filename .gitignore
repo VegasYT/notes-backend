@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Виртуальное окружение
+venv/
+.venv/
+env/
+
+# Переменные окружения
+.env
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Mypy
+.mypy_cache/
+
+# IDE
+.idea/
+.vscode/
+
+# Docker
+*.log

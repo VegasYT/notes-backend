@@ -1,0 +1,168 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-3">События приложения</h2>
+
+    {# ── Панель фильтров ── #}
+    <form method="get" class="card card-body mb-4 p-3">
+        <div class="row g-2 align-items-end">
+
+            <div class="col-sm-6 col-md-3 col-lg-2">
+                <label class="form-label form-label-sm mb-1">Тип события</label>
+                <select name="event_type" class="form-select form-select-sm">
+                    <option value="">Все типы</option>
+                    {% for et in event_types %}
+                        <option value="{{ et }}" {% if event_type == et %}selected{% endif %}>{{ et }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-sm-6 col-md-2 col-lg-1">
+                <label class="form-label form-label-sm mb-1">User ID</label>
+                <input type="text" name="user_id" value="{{ user_id }}"
+                       class="form-control form-control-sm" placeholder="1, 2, 3">
+            </div>
+
+            <div class="col-sm-6 col-md-3 col-lg-2">
+                <label class="form-label form-label-sm mb-1">Дата от</label>
+                <input type="datetime-local" name="date_from" value="{{ date_from }}"
+                       class="form-control form-control-sm">
+            </div>
+
+            <div class="col-sm-6 col-md-3 col-lg-2">
+                <label class="form-label form-label-sm mb-1">Дата до</label>
+                <input type="datetime-local" name="date_to" value="{{ date_to }}"
+                       class="form-control form-control-sm">
+            </div>
+
+            <div class="col-sm-4 col-md-2 col-lg-1">
+                <label class="form-label form-label-sm mb-1">Сортировка</label>
+                <select name="sort" class="form-select form-select-sm">
+                    <option value="desc" {% if sort == "desc" %}selected{% endif %}>Новые ↓</option>
+                    <option value="asc"  {% if sort == "asc"  %}selected{% endif %}>Старые ↑</option>
+                </select>
+            </div>
+
+            <div class="col-sm-4 col-md-2 col-lg-1">
+                <label class="form-label form-label-sm mb-1">На странице</label>
+                <select name="per_page" class="form-select form-select-sm">
+                    {% for n in [10, 20, 50, 100] %}
+                        <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-sm-4 col-md-auto d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm">Применить</button>
+                <a href="?" class="btn btn-outline-secondary btn-sm">Сбросить</a>
+            </div>
+        </div>
+    </form>
+
+    {# ── Статистика ── #}
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <small class="text-muted">
+            Найдено: <strong>{{ total }}</strong> событий
+            &nbsp;·&nbsp; Страница <strong>{{ page }}</strong> из <strong>{{ total_pages }}</strong>
+        </small>
+    </div>
+
+    {% if events %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 190px">Время</th>
+                    <th style="width: 160px">Тип события</th>
+                    <th style="width: 80px">User ID</th>
+                    <th>Данные</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                {% set payload = event.get("payload", {}) %}
+                {% set loop_id = loop.index %}
+                <tr>
+                    <td class="text-nowrap text-muted" style="font-size: 0.8rem">{{ event.get("timestamp", "-") }}</td>
+                    <td>
+                        {% set etype = event.get("event_type", "") %}
+                        {% if "error" in etype %}
+                            <span class="badge bg-danger">{{ etype }}</span>
+                        {% elif "login" in etype or "register" in etype %}
+                            <span class="badge bg-success">{{ etype }}</span>
+                        {% elif "delete" in etype %}
+                            <span class="badge bg-warning text-dark">{{ etype }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ etype }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% set uid = event.get("user_id") %}
+                        {% if uid is not none %}
+                            <a href="/admin/user/details/{{ uid }}" target="_blank">{{ uid }}</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if payload is mapping %}
+                            {% for key, val in payload.items() %}
+                                {% if key == "traceback" and val %}
+                                    <div class="mb-1">
+                                        <button class="btn btn-outline-danger btn-sm py-0 px-1"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#tb-{{ loop_id }}"
+                                                style="font-size: 0.75rem">
+                                            traceback
+                                        </button>
+                                        <div class="collapse mt-1" id="tb-{{ loop_id }}">
+                                            <pre class="bg-dark p-2 rounded" style="font-size: 0.7rem; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; color: rgb(192, 151, 255)">{{ val }}</pre>
+                                        </div>
+                                    </div>
+                                {% elif key != "traceback" %}
+                                    <div style="font-size: 0.8rem">
+                                        <span class="text-muted">{{ key }}:</span>
+                                        <span>{{ val }}</span>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <small class="text-muted">{{ payload }}</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# ── Пагинация ── #}
+    {% if total_pages > 1 %}
+    <nav>
+        <ul class="pagination pagination-sm justify-content-center flex-wrap">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page - 1 }}&per_page={{ per_page }}&sort={{ sort }}&event_type={{ event_type }}&user_id={{ user_id }}&date_from={{ date_from }}&date_to={{ date_to }}">‹</a>
+            </li>
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="?page={{ p }}&per_page={{ per_page }}&sort={{ sort }}&event_type={{ event_type }}&user_id={{ user_id }}&date_from={{ date_from }}&date_to={{ date_to }}">{{ p }}</a>
+                    </li>
+                {% elif p == page - 3 or p == page + 3 %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endfor %}
+            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ page + 1 }}&per_page={{ per_page }}&sort={{ sort }}&event_type={{ event_type }}&user_id={{ user_id }}&date_from={{ date_from }}&date_to={{ date_to }}">›</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+        <div class="alert alert-info">События не найдены.</div>
+    {% endif %}
+</div>
+{% endblock %}
