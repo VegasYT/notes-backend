@@ -34,7 +34,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    # ports: # TODO: НЕ ЗАБЫТЬ УБРАТЬ ЭТО ЧУДО!
+    # ports: # Для локального дебага
     #   - "7432:5432"
     networks:
       - notes_net
@@ -49,7 +49,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    # ports: # TODO: НЕ ЗАБЫТЬ УБРАТЬ ЭТО ЧУДО!
+    # ports: # Для локального дебага
     #     - "6379:6379"
     networks:
       - notes_net
@@ -64,7 +64,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    # ports: # TODO: НЕ ЗАБЫТЬ УБРАТЬ ЭТО ЧУДО!
+    # ports: # Для локального дебага
     #   - "37017:27017"
     networks:
       - notes_net
@@ -92,7 +92,7 @@ services:
       timeout: 10s
       retries: 15
       start_period: 30s
-    # ports: # TODO: НЕ ЗАБЫТЬ УБРАТЬ ЭТО ЧУДО!
+    # ports: # Для локального дебага
     #   - "29092:29092"
     networks:
       - notes_net
