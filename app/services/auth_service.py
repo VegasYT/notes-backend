@@ -39,7 +39,7 @@ class AuthService:
 
         return user
 
-    async def login(self, email: str, password: str) -> str:
+    async def login(self, email: str, password: str) -> tuple[str, User]:
         """Проверяет учётные данные и создаёт сессию в Redis"""
         user = await self._repo.get_by_email(email)
         if not user or not verify_password(password, user.hashed_password):
@@ -54,7 +54,7 @@ class AuthService:
             payload={"email": email},
         ))
 
-        return session_id
+        return session_id, user
 
     async def logout(self, session_id: str, user_id: int) -> None:
         """Удаляет сессию из Redis"""

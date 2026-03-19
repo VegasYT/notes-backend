@@ -28,7 +28,7 @@ async def login(
 ) -> User:
     """Выполняет вход, устанавливает cookie с session_id и возвращает данные пользователя"""
     service = AuthService(session, SessionStore(get_redis()))
-    session_id = await service.login(email=body.email, password=body.password)
+    session_id, user = await service.login(email=body.email, password=body.password)
 
     # Устанавливаем httponly cookie для безопасной передачи session_id
     response.set_cookie(
@@ -38,9 +38,6 @@ async def login(
         samesite="lax",
     )
 
-    from app.db.postgres.repositories.user_repo import UserRepository
-    repo = UserRepository(session)
-    user = await repo.get_by_email(body.email)
     return user
 
 
