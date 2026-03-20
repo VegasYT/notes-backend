@@ -109,7 +109,7 @@ pytest tests/
 
 ## Выдача админки через докер
 ```bash
-docker exec notes_postgres psql -U postgres -d notes_db -c "update users set is_admin = true where id = <id созданного пользователя>;"
+docker exec notes_postgres psql -U notes_user -d notes_db -c "update users set is_admin = true where id = <id созданного пользователя>;"
 ```
 
 ### 🗄️ Архитектура БД
